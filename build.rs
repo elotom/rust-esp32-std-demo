@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 
 use embuild::{
     self, bingen,
@@ -8,6 +8,9 @@ use embuild::{
 
 fn main() -> anyhow::Result<()> {
     // Necessary because of this issue: https://github.com/rust-lang/cargo/issues/9641
+    let dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    println!("cargo:rustc-link-lib=test_parameters");
+    println!("cargo:rustc-link-search={dir}/c");
     LinkArgs::output_propagated("ESP_IDF")?;
 
     let cfg = CfgArgs::try_from_env("ESP_IDF")?;

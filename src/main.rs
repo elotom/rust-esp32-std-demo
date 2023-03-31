@@ -112,299 +112,306 @@ thread_local! {
 
 static CS: esp_idf_hal::task::CriticalSection = esp_idf_hal::task::CriticalSection::new();
 
+extern "C"{
+    pub fn test_parameters(param1: u16,param2: u16,param3: u16,param4: u16,param5: u16,param6: u16,param7: u16,param8: u16, param9: u16, param10: u16   ) -> u16;
+}
+
 fn main() -> Result<()> {
     esp_idf_sys::link_patches();
 
-    test_print();
+    let ret = unsafe{test_parameters(100,200,300,400,500,600,700,800,900,1000)};
+    println!("Ret value should be 800 and is {}",ret);
 
-    test_atomics();
+    // test_print();
 
-    test_threads();
+    // test_atomics();
 
-    #[cfg(not(esp_idf_version = "4.3"))]
-    test_fs()?;
+    // test_threads();
 
-    // Bind the log crate to the ESP Logging facilities
-    esp_idf_svc::log::EspLogger::initialize_default();
+    // #[cfg(not(esp_idf_version = "4.3"))]
+    // test_fs()?;
 
-    // Get backtraces from anyhow; only works for Xtensa arch currently
-    // TODO: No longer working with ESP-IDF 4.3.1+
-    //#[cfg(target_arch = "xtensa")]
-    //env::set_var("RUST_BACKTRACE", "1");
+    // // Bind the log crate to the ESP Logging facilities
+    // esp_idf_svc::log::EspLogger::initialize_default();
 
-    #[allow(unused)]
-    let peripherals = Peripherals::take().unwrap();
-    #[allow(unused)]
-    let pins = peripherals.pins;
+    // // Get backtraces from anyhow; only works for Xtensa arch currently
+    // // TODO: No longer working with ESP-IDF 4.3.1+
+    // //#[cfg(target_arch = "xtensa")]
+    // //env::set_var("RUST_BACKTRACE", "1");
 
-    // If interrupt critical sections work fine, the code below should panic with the IWDT triggering
+    // #[allow(unused)]
+    // let peripherals = Peripherals::take().unwrap();
+    // #[allow(unused)]
+    // let pins = peripherals.pins;
+
+    // // If interrupt critical sections work fine, the code below should panic with the IWDT triggering
+    // // {
+    // //     info!("Testing interrupt critical sections");
+
+    // //     let mut x = 0;
+
+    // //     esp_idf_hal::interrupt::free(move || {
+    // //         for _ in 0..2000000 {
+    // //             for _ in 0..2000000 {
+    // //                 x += 1;
+
+    // //                 if x == 1000000 {
+    // //                     break;
+    // //                 }
+    // //             }
+    // //         }
+    // //     });
+    // // }
+
     // {
-    //     info!("Testing interrupt critical sections");
+    //     info!("Testing critical sections");
 
-    //     let mut x = 0;
+    //     {
+    //         let th = {
+    //             let _guard = CS.enter();
 
-    //     esp_idf_hal::interrupt::free(move || {
-    //         for _ in 0..2000000 {
-    //             for _ in 0..2000000 {
-    //                 x += 1;
+    //             let th = std::thread::spawn(move || {
+    //                 info!("Waiting for critical section");
+    //                 let _guard = CS.enter();
 
-    //                 if x == 1000000 {
-    //                     break;
-    //                 }
-    //             }
-    //         }
-    //     });
+    //                 info!("Critical section acquired");
+    //             });
+
+    //             std::thread::sleep(Duration::from_secs(5));
+
+    //             th
+    //         };
+
+    //         th.join().unwrap();
+    //     }
     // }
 
-    {
-        info!("Testing critical sections");
+    // #[allow(unused)]
+    // let sysloop = EspSystemEventLoop::take()?;
 
-        {
-            let th = {
-                let _guard = CS.enter();
+    // #[cfg(feature = "ttgo")]
+    // ttgo_hello_world(
+    //     pins.gpio4,
+    //     pins.gpio16,
+    //     pins.gpio23,
+    //     peripherals.spi2,
+    //     pins.gpio18,
+    //     pins.gpio19,
+    //     pins.gpio5,
+    // )?;
 
-                let th = std::thread::spawn(move || {
-                    info!("Waiting for critical section");
-                    let _guard = CS.enter();
+    // #[cfg(feature = "waveshare_epd")]
+    // waveshare_epd_hello_world(
+    //     peripherals.spi2,
+    //     pins.gpio13.into(),
+    //     pins.gpio14.into(),
+    //     pins.gpio15.into(),
+    //     pins.gpio25.into(),
+    //     pins.gpio27.into(),
+    //     pins.gpio26.into(),
+    // )?;
 
-                    info!("Critical section acquired");
-                });
+    // #[cfg(feature = "kaluga")]
+    // kaluga_hello_world(
+    //     pins.gpio6,
+    //     pins.gpio13,
+    //     pins.gpio16,
+    //     peripherals.spi3,
+    //     pins.gpio15,
+    //     pins.gpio9,
+    //     pins.gpio11,
+    // )?;
 
-                std::thread::sleep(Duration::from_secs(5));
+    // #[cfg(feature = "heltec")]
+    // heltec_hello_world(pins.gpio16, peripherals.i2c0, pins.gpio4, pins.gpio15)?;
 
-                th
-            };
+    // #[cfg(feature = "ssd1306g_spi")]
+    // ssd1306g_hello_world_spi(
+    //     pins.gpio4.into(),
+    //     pins.gpio16.into(),
+    //     peripherals.spi3,
+    //     pins.gpio18.into(),
+    //     pins.gpio23.into(),
+    //     pins.gpio5.into(),
+    // )?;
 
-            th.join().unwrap();
-        }
-    }
+    // #[cfg(feature = "ssd1306g")]
+    // let mut led_power = ssd1306g_hello_world(
+    //     peripherals.i2c0,
+    //     pins.gpio14.into(),
+    //     pins.gpio22.into(),
+    //     pins.gpio21.into(),
+    // )?;
 
-    #[allow(unused)]
-    let sysloop = EspSystemEventLoop::take()?;
+    // #[cfg(feature = "esp32s3_usb_otg")]
+    // esp32s3_usb_otg_hello_world(
+    //     pins.gpio9,
+    //     pins.gpio4,
+    //     pins.gpio8,
+    //     peripherals.spi3,
+    //     pins.gpio6,
+    //     pins.gpio7,
+    //     pins.gpio5,
+    // )?;
 
-    #[cfg(feature = "ttgo")]
-    ttgo_hello_world(
-        pins.gpio4,
-        pins.gpio16,
-        pins.gpio23,
-        peripherals.spi2,
-        pins.gpio18,
-        pins.gpio19,
-        pins.gpio5,
-    )?;
+    // #[allow(clippy::redundant_clone)]
+    // #[cfg(not(feature = "qemu"))]
+    // #[allow(unused_mut)]
+    // let mut wifi = wifi(peripherals.modem, sysloop.clone())?;
 
-    #[cfg(feature = "waveshare_epd")]
-    waveshare_epd_hello_world(
-        peripherals.spi2,
-        pins.gpio13.into(),
-        pins.gpio14.into(),
-        pins.gpio15.into(),
-        pins.gpio25.into(),
-        pins.gpio27.into(),
-        pins.gpio26.into(),
-    )?;
+    // #[allow(clippy::redundant_clone)]
+    // #[cfg(feature = "qemu")]
+    // let eth = eth_configure(
+    //     &sysloop,
+    //     Box::new(esp_idf_svc::eth::EspEth::wrap(
+    //         esp_idf_svc::eth::EthDriver::new_openeth(peripherals.mac, sysloop.clone())?,
+    //     )?),
+    // )?;
 
-    #[cfg(feature = "kaluga")]
-    kaluga_hello_world(
-        pins.gpio6,
-        pins.gpio13,
-        pins.gpio16,
-        peripherals.spi3,
-        pins.gpio15,
-        pins.gpio9,
-        pins.gpio11,
-    )?;
+    // #[allow(clippy::redundant_clone)]
+    // #[cfg(feature = "ip101")]
+    // let eth = eth_configure(
+    //     &sysloop,
+    //     Box::new(esp_idf_svc::eth::EspEth::wrap(
+    //         esp_idf_svc::eth::EthDriver::new_rmii(
+    //             peripherals.mac,
+    //             pins.gpio25,
+    //             pins.gpio26,
+    //             pins.gpio27,
+    //             pins.gpio23,
+    //             pins.gpio22,
+    //             pins.gpio21,
+    //             pins.gpio19,
+    //             pins.gpio18,
+    //             esp_idf_svc::eth::RmiiClockConfig::<gpio::Gpio0, gpio::Gpio16, gpio::Gpio17>::Input(
+    //                 pins.gpio0,
+    //             ),
+    //             Some(pins.gpio5),
+    //             esp_idf_svc::eth::RmiiEthChipset::IP101,
+    //             None,
+    //             sysloop.clone(),
+    //         )?,
+    //     )?),
+    // )?;
 
-    #[cfg(feature = "heltec")]
-    heltec_hello_world(pins.gpio16, peripherals.i2c0, pins.gpio4, pins.gpio15)?;
+    // #[cfg(feature = "w5500")]
+    // let eth = eth_configure(
+    //     &sysloop,
+    //     Box::new(esp_idf_svc::eth::EspEth::wrap(
+    //         esp_idf_svc::eth::EthDriver::new_spi(
+    //             peripherals.spi2,
+    //             pins.gpio13,
+    //             pins.gpio12,
+    //             pins.gpio26,
+    //             pins.gpio27,
+    //             esp_idf_hal::spi::Dma::Auto(4096),
+    //             Some(pins.gpio14),
+    //             Some(pins.gpio25),
+    //             esp_idf_svc::eth::SpiEthChipset::W5500,
+    //             20.MHz().into(),
+    //             Some(&[0x02, 0x00, 0x00, 0x12, 0x34, 0x56]),
+    //             None,
+    //             sysloop.clone(),
+    //         )?,
+    //     )?),
+    // )?;
 
-    #[cfg(feature = "ssd1306g_spi")]
-    ssd1306g_hello_world_spi(
-        pins.gpio4.into(),
-        pins.gpio16.into(),
-        peripherals.spi3,
-        pins.gpio18.into(),
-        pins.gpio23.into(),
-        pins.gpio5.into(),
-    )?;
+    // test_tcp()?;
 
-    #[cfg(feature = "ssd1306g")]
-    let mut led_power = ssd1306g_hello_world(
-        peripherals.i2c0,
-        pins.gpio14.into(),
-        pins.gpio22.into(),
-        pins.gpio21.into(),
-    )?;
+    // test_tcp_bind()?;
 
-    #[cfg(feature = "esp32s3_usb_otg")]
-    esp32s3_usb_otg_hello_world(
-        pins.gpio9,
-        pins.gpio4,
-        pins.gpio8,
-        peripherals.spi3,
-        pins.gpio6,
-        pins.gpio7,
-        pins.gpio5,
-    )?;
+    // let _sntp = sntp::EspSntp::new_default()?;
+    // info!("SNTP initialized");
 
-    #[allow(clippy::redundant_clone)]
-    #[cfg(not(feature = "qemu"))]
-    #[allow(unused_mut)]
-    let mut wifi = wifi(peripherals.modem, sysloop.clone())?;
+    // let (eventloop, _subscription) = test_eventloop()?;
 
-    #[allow(clippy::redundant_clone)]
-    #[cfg(feature = "qemu")]
-    let eth = eth_configure(
-        &sysloop,
-        Box::new(esp_idf_svc::eth::EspEth::wrap(
-            esp_idf_svc::eth::EthDriver::new_openeth(peripherals.mac, sysloop.clone())?,
-        )?),
-    )?;
+    // let mqtt_client = test_mqtt_client()?;
 
-    #[allow(clippy::redundant_clone)]
-    #[cfg(feature = "ip101")]
-    let eth = eth_configure(
-        &sysloop,
-        Box::new(esp_idf_svc::eth::EspEth::wrap(
-            esp_idf_svc::eth::EthDriver::new_rmii(
-                peripherals.mac,
-                pins.gpio25,
-                pins.gpio26,
-                pins.gpio27,
-                pins.gpio23,
-                pins.gpio22,
-                pins.gpio21,
-                pins.gpio19,
-                pins.gpio18,
-                esp_idf_svc::eth::RmiiClockConfig::<gpio::Gpio0, gpio::Gpio16, gpio::Gpio17>::Input(
-                    pins.gpio0,
-                ),
-                Some(pins.gpio5),
-                esp_idf_svc::eth::RmiiEthChipset::IP101,
-                None,
-                sysloop.clone(),
-            )?,
-        )?),
-    )?;
+    // let _timer = test_timer(eventloop, mqtt_client)?;
 
-    #[cfg(feature = "w5500")]
-    let eth = eth_configure(
-        &sysloop,
-        Box::new(esp_idf_svc::eth::EspEth::wrap(
-            esp_idf_svc::eth::EthDriver::new_spi(
-                peripherals.spi2,
-                pins.gpio13,
-                pins.gpio12,
-                pins.gpio26,
-                pins.gpio27,
-                esp_idf_hal::spi::Dma::Auto(4096),
-                Some(pins.gpio14),
-                Some(pins.gpio25),
-                esp_idf_svc::eth::SpiEthChipset::W5500,
-                20.MHz().into(),
-                Some(&[0x02, 0x00, 0x00, 0x12, 0x34, 0x56]),
-                None,
-                sysloop.clone(),
-            )?,
-        )?),
-    )?;
+    // #[cfg(feature = "experimental")]
+    // experimental::test()?;
 
-    test_tcp()?;
+    // #[cfg(not(feature = "qemu"))]
+    // #[cfg(esp_idf_lwip_ipv4_napt)]
+    // enable_napt(&mut wifi)?;
 
-    test_tcp_bind()?;
+    // let mutex = Arc::new((Mutex::new(None), Condvar::new()));
 
-    let _sntp = sntp::EspSntp::new_default()?;
-    info!("SNTP initialized");
+    // let httpd = httpd(mutex.clone())?;
 
-    let (eventloop, _subscription) = test_eventloop()?;
+    // #[cfg(feature = "ssd1306g")]
+    // {
+    //     for s in 0..3 {
+    //         info!("Powering off the display in {} secs", 3 - s);
+    //         thread::sleep(Duration::from_secs(1));
+    //     }
 
-    let mqtt_client = test_mqtt_client()?;
+    //     led_power.set_low()?;
+    // }
 
-    let _timer = test_timer(eventloop, mqtt_client)?;
+    // let mut wait = mutex.0.lock().unwrap();
 
-    #[cfg(feature = "experimental")]
-    experimental::test()?;
+    // #[cfg(all(esp32, esp_idf_version_major = "4"))]
+    // let mut hall_sensor = peripherals.hall_sensor;
 
-    #[cfg(not(feature = "qemu"))]
-    #[cfg(esp_idf_lwip_ipv4_napt)]
-    enable_napt(&mut wifi)?;
+    // #[cfg(esp32)]
+    // let adc_pin = pins.gpio34;
+    // #[cfg(any(esp32s2, esp32s3, esp32c3))]
+    // let adc_pin = pins.gpio2;
 
-    let mutex = Arc::new((Mutex::new(None), Condvar::new()));
+    // let mut a2 = adc::AdcChannelDriver::<_, adc::Atten11dB<adc::ADC1>>::new(adc_pin)?;
 
-    let httpd = httpd(mutex.clone())?;
+    // let mut powered_adc1 = adc::AdcDriver::new(
+    //     peripherals.adc1,
+    //     &adc::config::Config::new().calibration(true),
+    // )?;
 
-    #[cfg(feature = "ssd1306g")]
-    {
-        for s in 0..3 {
-            info!("Powering off the display in {} secs", 3 - s);
-            thread::sleep(Duration::from_secs(1));
-        }
+    // #[allow(unused)]
+    // let cycles = loop {
+    //     if let Some(cycles) = *wait {
+    //         break cycles;
+    //     } else {
+    //         wait = mutex
+    //             .1
+    //             .wait_timeout(wait, Duration::from_secs(1))
+    //             .unwrap()
+    //             .0;
 
-        led_power.set_low()?;
-    }
+    //         #[cfg(all(esp32, esp_idf_version_major = "4"))]
+    //         log::info!(
+    //             "Hall sensor reading: {}mV",
+    //             powered_adc1.read_hall(&mut hall_sensor).unwrap()
+    //         );
+    //         log::info!(
+    //             "A2 sensor reading: {}mV",
+    //             powered_adc1.read(&mut a2).unwrap()
+    //         );
+    //     }
+    // };
 
-    let mut wait = mutex.0.lock().unwrap();
+    // for s in 0..3 {
+    //     info!("Shutting down in {} secs", 3 - s);
+    //     thread::sleep(Duration::from_secs(1));
+    // }
 
-    #[cfg(all(esp32, esp_idf_version_major = "4"))]
-    let mut hall_sensor = peripherals.hall_sensor;
+    // drop(httpd);
+    // info!("Httpd stopped");
 
-    #[cfg(esp32)]
-    let adc_pin = pins.gpio34;
-    #[cfg(any(esp32s2, esp32s3, esp32c3))]
-    let adc_pin = pins.gpio2;
+    // #[cfg(not(feature = "qemu"))]
+    // {
+    //     drop(wifi);
+    //     info!("Wifi stopped");
+    // }
 
-    let mut a2 = adc::AdcChannelDriver::<_, adc::Atten11dB<adc::ADC1>>::new(adc_pin)?;
+    // #[cfg(any(feature = "qemu", feature = "w5500", feature = "ip101"))]
+    // {
+    //     drop(eth);
+    //     info!("Eth stopped");
+    // }
 
-    let mut powered_adc1 = adc::AdcDriver::new(
-        peripherals.adc1,
-        &adc::config::Config::new().calibration(true),
-    )?;
-
-    #[allow(unused)]
-    let cycles = loop {
-        if let Some(cycles) = *wait {
-            break cycles;
-        } else {
-            wait = mutex
-                .1
-                .wait_timeout(wait, Duration::from_secs(1))
-                .unwrap()
-                .0;
-
-            #[cfg(all(esp32, esp_idf_version_major = "4"))]
-            log::info!(
-                "Hall sensor reading: {}mV",
-                powered_adc1.read_hall(&mut hall_sensor).unwrap()
-            );
-            log::info!(
-                "A2 sensor reading: {}mV",
-                powered_adc1.read(&mut a2).unwrap()
-            );
-        }
-    };
-
-    for s in 0..3 {
-        info!("Shutting down in {} secs", 3 - s);
-        thread::sleep(Duration::from_secs(1));
-    }
-
-    drop(httpd);
-    info!("Httpd stopped");
-
-    #[cfg(not(feature = "qemu"))]
-    {
-        drop(wifi);
-        info!("Wifi stopped");
-    }
-
-    #[cfg(any(feature = "qemu", feature = "w5500", feature = "ip101"))]
-    {
-        drop(eth);
-        info!("Eth stopped");
-    }
-
-    #[cfg(esp32s2)]
-    start_ulp(peripherals.ulp, cycles)?;
+    // #[cfg(esp32s2)]
+    // start_ulp(peripherals.ulp, cycles)?;
 
     Ok(())
 }
